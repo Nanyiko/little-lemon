@@ -1,2 +1,2 @@
-# little-lemon
+# capstone
 Capstone(React App)
