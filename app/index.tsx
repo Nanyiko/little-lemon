@@ -14,6 +14,7 @@ export default function App() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [isLoading, setIsLoading] = useState("")
 
   useEffect(() => {
     const loadUserData = async () => {

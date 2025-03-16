@@ -5,12 +5,14 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import contactInformation from '@/screens/OnBoarding'
+import { Avatar } from 'react-native-paper';
 
-function Profile({ firstName, lastName, email, phoneNumber, setFirstName, setLastName, setEmail, setPhoneNumber, setLoggedIn, navigation }: { firstName: string, lastName: string, email: string, phoneNumber: string, setFirstName: (name: string) => void, setLastName: (name: string) => void, setEmail: (email: string) => void, setPhoneNumber: (phone: string) => void, setLoggedIn: (name: boolean) => void, loggedIn: boolean, navigation: any }) {
+function Profile({ firstName, lastName, email, phoneNumber, setFirstName, setLastName, setEmail, setPhoneNumber, setLoggedIn, navigation, loggedIn }: { firstName: string, lastName: string, email: string, phoneNumber: string, setFirstName: (name: string) => void, setLastName: (name: string) => void, setEmail: (email: string) => void, setPhoneNumber: (phone: string) => void, setLoggedIn: (name: boolean) => void, loggedIn: boolean, navigation: any }) {
   const [orderStatus, setOrderStatus] = useState(true)
   const [passwordChanges, setpasswordChanges] = useState(true)
   const [specialOffers, setSpecialOffers] = useState(true)
   const [newsletters, setnewsletters] = useState(true)
+  const [image, setImage] = useState(null);
 
 const notificationPreferences = JSON.stringify({
     orderStatus: orderStatus,
@@ -19,31 +21,22 @@ const notificationPreferences = JSON.stringify({
     newsletters: newsletters
 });
 
-useEffect(() => {
-    const loadContactInformation = async () => {
-        try {
-            const contactJsonValue = await AsyncStorage.getItem("contactInformation");
-            if (contactJsonValue) {
-                const contactInfo = JSON.parse(contactJsonValue);
-                console.log("Loaded Profile Data:", contactInfo);  // ✅ Debugging
-
-                // Prevent overwriting with empty values
-                setFirstName(contactInfo.name ?? firstName);
-                setLastName(contactInfo.lastName ?? lastName);
-                setEmail(contactInfo.email ?? email);
-                setPhoneNumber(contactInfo.phoneNumber ?? phoneNumber);
-                setLoggedIn(contactInfo.loggedIn ?? false);
-            }
-        } catch (e) {
-            Alert.alert(`Failed to load contact information. ${e}`);
+const loadContactInformation = async () => {
+    try {
+        const contactJsonValue = await AsyncStorage.getItem("contactInformation");
+        if (contactJsonValue) {
+            const contactInfo = JSON.parse(contactJsonValue);
+            setFirstName(contactInfo.name);
+            setLastName(contactInfo.lastName);
+            setEmail(contactInfo.email ?? email);
+            setPhoneNumber(contactInfo.phoneNumber);
+            setLoggedIn(contactInfo.loggedIn);
         }
-    };
+    } catch (e) {
+        console.error("Failed to load contact information.", e )
+    }
+};
 
-    loadContactInformation();
-}, []); // ✅ Runs only once when the component mounts
-
-
-// Load on component mount
 
 
     const loadNotificationPreferences = async ()=> {
@@ -57,24 +50,24 @@ useEffect(() => {
                 setnewsletters(notificationPrefs.newsletters);
         }
         } catch (e) {
-            Alert.alert(`Failed to load contact information. ${e}`);
+            console.error("Failed to load notification prefs.", e)
         }
     }
 
     const saveCustomerInformation = async () => {
         try {
-            await AsyncStorage.setItem("contactInformation", JSON.stringify({ name: firstName, lastName: lastName, email: email, phoneNumber: phoneNumber, loggedIn: true }));
+            await AsyncStorage.setItem("contactInformation", JSON.stringify({ name: firstName, lastName, email, phoneNumber, loggedIn }));
         } catch (e) {
-            Alert.alert(`Failed to load contact information. ${e}`);
+            console.error("Failed to save contact information.", e )
         }
     };
     
 
     const saveNotificationPreferences = async () => {
         try {
-            await AsyncStorage.setItem("contactInformation", JSON.stringify({ orderStatus: orderStatus, passwordChanges: passwordChanges, specialOffers: specialOffers, newsletters: newsletters }));
+            await AsyncStorage.setItem("notificationPreferences", notificationPreferences);
         } catch (e) {
-            Alert.alert(`Failed to load contact information. ${e}`);
+            console.error("Failed to save notification prefs.", e)
         }
     };
 
@@ -83,35 +76,16 @@ useEffect(() => {
     }, [])
 
     useEffect(() => {
-        saveCustomerInformation();
-    }, [contactInformation]);
-    useEffect(() => {
-        saveNotificationPreferences();
-    }, [notificationPreferences]);
-
-    useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                const jsonValue = await AsyncStorage.getItem("contactInformation");
-                if (jsonValue) {
-                    const contactInfo = JSON.parse(jsonValue);
-                    console.log("Loaded Data:", contactInfo);  // ✅ Debugging
-                    setFirstName(contactInfo.name);
-                    setLastName(contactInfo.lastName);
-                    setEmail(contactInfo.email);
-                    setPhoneNumber(contactInfo.phoneNumber);
-                    setLoggedIn(contactInfo.loggedIn);
-                } else {
-                    setLoggedIn(false);
-                }
-            } catch (e) {
-                console.error("Failed to load user data", e);
-                setLoggedIn(false);
-            }
-        };
-    
-        loadUserData();
-    }, []);
+        loadContactInformation()
+    }, [])
+    const getInitials = () => {
+        if (firstName != "" && lastName != ""){
+            return firstName[0] + lastName[0]
+        }
+        else{
+            return "U"
+        }
+    }
     
 
   return (
@@ -121,14 +95,14 @@ useEffect(() => {
                 <Ionicons name='arrow-back' style={headerStyles.buttonIcon}size={25}/>
             </Pressable>
             <LittleLemonHeader />
-            <Image source={require("@/assets/images/Profile.png")} style={headerStyles.profileImage}/>
+            <Avatar.Text size={40} label={getInitials()} style={headerStyles.profileImage} />
         </View>
         <ScrollView style={bodyStyles.container}>
             <View style={bodyStyles.personalInformation}>
                 <Text style={bodyStyles.boldText}>Personal Information</Text>
                 <Text style={[bodyStyles.regularText, {color: "#8A8989"}]}>Avatar</Text>
                 <View style={bodyStyles.profileImageContainer}>
-                    <Image source={require("@/assets/images/Profile.png")} style={bodyStyles.profileImage} />
+                <Avatar.Text size={75} label={getInitials()} style={bodyStyles.profileImage} />
                     <Pressable style={bodyStyles.changeButton}>
                         <Text style={bodyStyles.changeButtonText}>Change</Text>
                     </Pressable>
@@ -186,6 +160,7 @@ useEffect(() => {
                 <Pressable style={bodyStyles.logoutButton} onPress={() => {
                     navigation.navigate("OnBoarding")
                     setLoggedIn(false)
+                    loadContactInformation()
                 }}>
                     <Text style={bodyStyles.logoutButtonText}>Logout</Text>
                 </Pressable>
@@ -195,15 +170,16 @@ useEffect(() => {
                     </Pressable>
                     
                     <Pressable
-    style={bodyStyles.saveButton}
-    onPress={() => {
-        saveCustomerInformation();  // Save to AsyncStorage
-        setLoggedIn(true);          // Update state
-        Alert.alert("Changes Saved!");
-    }}
->
-    <Text style={bodyStyles.changeButtonText}>Save Changes</Text>
-</Pressable>
+                        style={bodyStyles.saveButton}
+                        onPress={() => {
+                            saveCustomerInformation();
+                            saveNotificationPreferences()
+                            setLoggedIn(true);
+                            Alert.alert("Changes Saved!");
+                        }}
+                    >
+                        <Text style={bodyStyles.changeButtonText}>Save Changes</Text>
+                    </Pressable>
 
                 </View>
             </View>
@@ -244,6 +220,7 @@ const headerStyles = StyleSheet.create({
         width: 50,
         height: 50,
         margin: 10,
+        backgroundColor: "#495E57"
     }
 });
 
@@ -276,6 +253,7 @@ const bodyStyles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 62.5,
+        backgroundColor: "#495E57"
     },
     changeButton: {
         backgroundColor: "#495E57",

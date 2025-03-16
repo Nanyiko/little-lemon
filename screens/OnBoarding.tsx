@@ -41,13 +41,18 @@ function OnBoarding( {navigation, setLoggedIn, setFirstName, setLastName, setEma
     }
 
     useEffect(() => {
-        if (firstName !== "" && validateEmail(email)){
+        const allFieldsFull = firstName !== "" && validateEmail(email) && phoneNumber !== "" && lastName !== ""
+        if (allFieldsFull){
             setActive(true)
         }
-        else{
+        if (!allFieldsFull){
             setActive(false)
         }
-    }, [firstName, email])
+    }, [firstName, email, phoneNumber, lastName])
+
+    useEffect(() => {
+        loadPreferences();
+    }, []);
 
     const loadPreferences = async () => {
         try {
@@ -68,7 +73,7 @@ function OnBoarding( {navigation, setLoggedIn, setFirstName, setLastName, setEma
 
     const savePreferences = async () => {
         try {
-            await AsyncStorage.setItem("contactInformation", contactInformation);
+            await AsyncStorage.setItem("contactInformation", JSON.stringify({ name: firstName, lastName, email, phoneNumber, loggedIn }));
         } catch (e) {
             Alert.alert(`Failed to load contact information. ${e}`);
         }
@@ -82,33 +87,27 @@ function OnBoarding( {navigation, setLoggedIn, setFirstName, setLastName, setEma
         if (active) {
             savePreferences();
         }
-    }, [contactInformation]);
-
-    useEffect(() => {
-        if(loggedIn){
-            navigation.navigate("Profile")
-        }
-    })
+    }, [JSON.stringify({ name: firstName, lastName, email, phoneNumber, loggedIn })]);
 
     return (
         <>
         <LittleLemonHeader />
-        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "android" ? 'height' : 'padding'}>
-            <Text style={styles.regularText}>Let us get to know you</Text>
-            <ScrollView style={styles.formContainer}>
-                <Text style={styles.regularText}>First Name</Text>
-                <TextInput style={styles.input} value={firstName} onChangeText={onChangeFirstName} placeholder='Enter your first name' />
-                <Text style={styles.regularText}>Last Name</Text>
-                <TextInput style={styles.input} value={lastName} onChangeText={onChangeLastName} placeholder='Enter your last name' />
-                <Text style={styles.regularText}>Email</Text>
-                <TextInput style={styles.input} value={email} onChangeText={onChangeEmail} placeholder='Enter your email address' keyboardType='email-address' autoCapitalize='none'/>
-                <Text style={styles.regularText}>Phone Number</Text>
-                <TextInput style={styles.input} value={phoneNumber} onChangeText={onChangePhoneNumber} placeholder='Enter your phone number' />
-            </ScrollView>
-            <View style={styles.buttonContainer}>
-                <Pressable style={active ? styles.activeButton : styles.disabledButton} onPress={active ? save : () => {}}>
-                    <Text style={active ? styles.activeButtonText : styles.disabledButtonText}>Next</Text>
-                </Pressable>
+        <KeyboardAvoidingView style={styles.container} behavior='height'>
+            <View style={styles.headerContainer}>
+                <Text style={styles.headerText}>Let us get to know you</Text>
+            </View>
+            <View style={styles.contentContainer}>
+                <ScrollView style={styles.formContainer}>
+                    <Text style={styles.regularText}>First Name</Text>
+                    <TextInput style={styles.input} value={firstName} onChangeText={onChangeFirstName} placeholder='Enter your first name' />
+                    <Text style={styles.regularText}>Email</Text>
+                    <TextInput style={styles.input} value={email} onChangeText={onChangeEmail} placeholder='Enter your email address' keyboardType='email-address' autoCapitalize='none'/>
+                </ScrollView>
+                <View style={styles.buttonContainer}>
+                    <Pressable style={active ? styles.activeButton : styles.disabledButton} onPress={active ? save : () => {}}>
+                        <Text style={active ? styles.activeButtonText : styles.disabledButtonText}>Next</Text>
+                    </Pressable>
+                </View>
             </View>
         </KeyboardAvoidingView>
         </>
@@ -121,6 +120,23 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#EDEFEE"
+    },
+    headerContainer: {
+        backgroundColor: "#495E57",
+        justifyContent: "center",
+        alignContent: "center",
+        marginHorizontal: 2,
+        borderRadius: 5
+    },
+    headerText: {
+        color: "#EDEFEE",
+        fontSize: 25,
+        textAlign: "center",
+        padding: 30
+    },
+    contentContainer: {
+        flex: 1,
+        justifyContent: "space-between"
     },
     regularText: {
         color: "#333333",
@@ -139,9 +155,8 @@ const styles = StyleSheet.create({
         borderRadius: 10
     },
     buttonContainer: {
-        flex: 1,
         justifyContent: "flex-end",
-        margin: 20
+        marginVertical: 20
     },
     activeButton: {
         backgroundColor: "#495E57",
