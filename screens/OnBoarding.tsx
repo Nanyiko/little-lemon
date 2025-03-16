@@ -10,7 +10,6 @@ import {
     ScrollView
 } from 'react-native'
 
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useState, useEffect } from 'react'
 import { validateEmail } from '@/utils'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -78,10 +77,6 @@ function OnBoarding( {navigation, setLoggedIn, setFirstName, setLastName, setEma
             Alert.alert(`Failed to load contact information. ${e}`);
         }
     };
-
-    useEffect(() => {
-        loadPreferences();
-    }, []);
 
     useEffect(() => {
         if (active) {

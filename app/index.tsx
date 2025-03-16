@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import OnBoarding from '@/screens/OnBoarding';
 import Profile from '@/screens/Profile';
+import SplashScreen from '@/components/SplashScreen';
+import HomePage from '@/screens/HomePage'
 
 export default function App() {
   const Stack = createNativeStackNavigator();
@@ -14,7 +16,7 @@ export default function App() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isLoading, setIsLoading] = useState("")
+  const [isLoading, setIsLoading] = useState(true); // Start with loading state
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -33,29 +35,30 @@ export default function App() {
       } catch (e) {
         console.error("Failed to load user data", e);
         setLoggedIn(false);
+      } finally {
+        setIsLoading(false); // Set loading to false after data is loaded
       }
     };
 
     loadUserData();
   }, []);
 
-  if (loggedIn === null) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#495E57" />
-      </View>
-    );
+  if (isLoading) {
+    return <SplashScreen />;
   }
 
   return (
     <>
-      <StatusBar backgroundColor={"#EDEFEE"} translucent={true} barStyle={"dark-content"} />
-      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "OnBoarding"} screenOptions={{ headerShown: false }}>
+      <StatusBar backgroundColor={"#FFFFFF"} translucent={true} barStyle={"dark-content"} />
+      <Stack.Navigator initialRouteName={loggedIn ? "HomePage" : "OnBoarding"} screenOptions={{ headerShown: false }}>
           <Stack.Screen name="OnBoarding">
             {props => <OnBoarding {...props} setLoggedIn={setLoggedIn} setFirstName={setFirstName} setLastName={setLastName} setEmail={setEmail} setPhoneNumber={setPhoneNumber} loggedIn={loggedIn} />}
           </Stack.Screen>
           <Stack.Screen name="Profile">
             {props => <Profile {...props} firstName={firstName} lastName={lastName} email={email} phoneNumber={phoneNumber} setLoggedIn={setLoggedIn} setFirstName={setFirstName} setLastName={setLastName} setEmail={setEmail} setPhoneNumber={setPhoneNumber} loggedIn={loggedIn} />}
+          </Stack.Screen>
+          <Stack.Screen name="HomePage">
+            {props => <HomePage {...props} firstName={firstName} lastName={lastName} loggedIn={loggedIn} />}
           </Stack.Screen>
         </Stack.Navigator>
     </>

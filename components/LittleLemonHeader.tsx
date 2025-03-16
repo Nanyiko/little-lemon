@@ -15,7 +15,7 @@ const imageStyle = StyleSheet.create({
         justifyContent: "center",
         alignContent: "center",
         flexDirection: "row",
-        backgroundColor: "#EDEFEE"
+        backgroundColor: "#FFFFFF"
     },
     image: {
         padding: 20,
